@@ -8,6 +8,7 @@ function createPlayer(file){
     $('#audio').remove();
     $('#player-hook').append('<audio id="audio" src=""></audio>');
     if (window.webkitURL) {
+        console.log('webkit');
         var url = window.webkitURL.createObjectURL(file);
     } else {
         var url = window.URL.createObjectURL(file);      
@@ -172,6 +173,17 @@ function loadFileName(){
     }    
 }
 
+function dragListener(){
+    var button = $('.file-input-wrapper')[0];
+    button.addEventListener('dragover', function(){
+        $('.file-input-wrapper').addClass('hover');
+    }, false);
+    button.addEventListener('dragleave', function(){
+        $('.file-input-wrapper').removeClass('hover');
+    }, false);
+    
+}
+
 /******************************************
                 Other
 ******************************************/
@@ -193,6 +205,28 @@ function listSupportedFormats(){
         }
     });
     return supportedFormats.join(', ');
+}
+
+function checkTypeSupport(file){
+  var a = document.createElement('audio');
+  return !!(a.canPlayType && a.canPlayType(file.type).replace(/no/, ''));
+}
+
+function reactToFile(input){
+    var file = input.files[0];
+    if ( checkTypeSupport( file ) === true ){
+        createPlayer( file );
+        initAudioJS();
+        adjustPlayerWidth();
+        toggleControls();
+        localStorage.setItem("lastfile", file.name);
+        $('.scrubber .loaded').html( file.name );
+        console.log('Loading complete.') ;
+    } else {
+        var msg = "Your browser does not support " + file.type.split("/")[1] + " files. Switch to a different browser or <a href=\"http://media.io\">convert your file</a> to another format.";
+        $('#formats').html(msg).addClass('warning');
+    }
+    
 }
 
 function toggleControls(){
@@ -219,6 +253,7 @@ function init(){
     loadFileName();
     setFormatsMessage();
     adjustEditorHeight();
+    dragListener();
     setStartButton();
 }
 
@@ -320,21 +355,15 @@ $(window).resize(function() {
     });
     
     $('#attach').change(function() {
-      createPlayer( this.files[0] );
-      initAudioJS();
-      adjustPlayerWidth();
-      toggleControls();        
-      localStorage.setItem("lastfile", this.files[0].name);
-      $('.scrubber .loaded').html( this.files[0].name );    
-      console.log('Loading complete.')    ;
-    });
-    
+        reactToFile(this);
+    });    
     // $('.timestamp').click(function(){
     //     setFromTimestamp( $(this) );
     // });    
     
 
 // End UI
+
 
 
 })(); // end script
