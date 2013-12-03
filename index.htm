@@ -89,6 +89,22 @@
         <p>- <em>Ctrl+I</em> adds <em>italic</em> formatting and <b>Ctrl+B</b> adds <b>bold</b> formatting.</p>
         <p>- Press ESC to play/pause, and Ctrl+J to insert the current timestamp.<p>
     </div>
+    
+    <div class="text-panel">
+        <button class="sbutton bold" onclick="document.execCommand('bold',false,null);">
+            <i class="icon-bold"></i><span class="label">ctrl+b</span>
+        </button>
+        <button class="sbutton italic" onclick="document.execCommand('italic',false,null);">
+            <i class="icon-italic"></i><span class="label">ctrl+i</span>
+        </button>
+        <button class="sbutton time" onclick="insertTimestamp();">
+            <i class="icon-time"></i><span class="label">ctrl+j</span>
+        </button>
+        <div class="wordcount" id="wc">
+            
+        </div>
+    </div>
+    
 </div>
 
 <div class="feedback" style="color: #888;position: absolute;bottom: 10px;right: 10px;z-index: 100;font-size: 10px;">Problems? <a style="color: inherit;" href="http://twitter.com/otranscribe" target="_blank">Tweet</a> or <a href="mailto:mail@elliotbentley.com?subject=oTranscribe" style="color: inherit;" target="_blank">email</a> us.</div>

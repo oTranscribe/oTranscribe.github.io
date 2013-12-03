@@ -406,3 +406,68 @@ body {
   position: relative;
   height: 500px;
   background: #EEE; }
+
+.text-panel {
+  position: fixed;
+  top: 100px;
+  width: 200px;
+  padding-left: 20px;
+  text-align: left;
+  padding-top: 200px;
+  -webkit-transition: padding 1s;
+  transition: padding 1s;
+  opacity: 0.3;
+  -webkit-transition: opacity 0.2s, padding 1s;
+  transition: opacity 0.2s, padding 1s; }
+  .text-panel.editing {
+    padding-top: 0px; }
+  .text-panel .sbutton {
+    display: block;
+    background: inherit;
+    border: none;
+    padding: 0;
+    margin: 0;
+    padding: 5px 0; }
+    .text-panel .sbutton.time {
+      display: none; }
+      .text-panel .sbutton.time.active {
+        display: block; }
+    .text-panel .sbutton i {
+      font-size: 20px;
+      min-width: 20px;
+      text-align: center;
+      display: inline-block;
+      vertical-align: middle;
+      padding: 3px;
+      border: 1px solid #CCC;
+      border-radius: 2px; }
+      .text-panel .sbutton i:hover {
+        border-color: #AAA;
+        cursor: pointer; }
+      .text-panel .sbutton i:active {
+        box-shadow: 0 0 3px grey inset; }
+      .text-panel .sbutton i.active {
+        color: #3482b1; }
+    .text-panel .sbutton .label {
+      text-transform: uppercase;
+      font-size: 10px;
+      padding: 0 5px;
+      display: inline-block;
+      opacity: 0;
+      -webkit-transition: opacity 0.2s, padding 1s;
+      transition: opacity 0.2s, padding 1s; }
+  .text-panel .wordcount {
+    padding: 5px 0;
+    font-size: 16px;
+    margin-top: 10px; }
+    .text-panel .wordcount:after {
+      content: " words";
+      opacity: 0;
+      -webkit-transition: opacity 0.2s, padding 1s;
+      transition: opacity 0.2s, padding 1s; }
+  .text-panel:hover {
+    opacity: 1; }
+    .text-panel:hover .wordcount:after {
+      opacity: 1; }
+    .text-panel:hover .sbutton .label {
+      opacity: 0.5; }

@@ -100,28 +100,68 @@ function adjustEditorHeight(){
     $('.textbox-container').height( window.innerHeight - 36 );
 }
 
+function placeTextPanel(){
+   var position = parseInt( $('#textbox').offset().left, 10) + 700;
+   $('.text-panel').css('left', position);
+}
+
+function countWords(str) {
+    var count = 0,
+                i,
+                j = str.length;
+
+    for (i = 0; i <= j;i++){
+        if (str.charAt(i) == " ") {
+            count ++;
+        }
+    }
+    return count + 1;  
+}
+
+function countTextbox(){
+    var count = countWords( document.getElementById('textbox').innerHTML );
+    document.getElementById('wc').innerHTML = count;
+}
+
+function initWordCount(){
+    setInterval(function(){
+        countTextbox();
+    }, 1000);
+    
+}
+
+
+function watchFormatting(){
+    var b = document.queryCommandState("Bold");
+    var bi = $('.sbutton.bold i');
+    var i = document.queryCommandState("italic");
+    var ii = $('.sbutton.italic i');
+    
+    if (b === true){
+        bi.addClass('active');
+    } else {
+        bi.removeClass('active');
+    }
+    if (i === true){
+        ii.addClass('active');
+    } else {
+        ii.removeClass('active');
+    }
+}
+
+function initWatchFormatting(){
+    setInterval(function(){
+        watchFormatting();
+    }, 100);
+}
+
+
 /******************************************
                 Timestamp
 ******************************************/
 
 // get timestamp
 // var timestamp;
-function getTimestamp(){
-    // get timestap
-    var time = document.getElementById('audio').currentTime  
-    var minutes = Math.floor(time / 60);
-    var seconds = ("0" + Math.round( time - minutes * 60 ) ).slice(-2);
-    return minutes+":"+seconds;
-};
-
-function insertTimestamp(){
-    document.execCommand('insertHTML',false,
-    '<span class="timestamp" contenteditable="false" data="hi" onclick="var x = this; setFromTimestamp(\'' + getTimestamp() + '\', x);">' + getTimestamp() + '</span>&nbsp;'
-    );
-    $('.timestamp').each(function( index ) {
-        $( this )[0].contentEditable = false;
-    });
-}
 
 
 function saveText(){
@@ -203,6 +243,8 @@ function reactToFile(input){
 function toggleControls(){
     $('.topbar').toggleClass('inputting');
     $('.input').toggleClass('active');
+    $('.sbutton.time').toggleClass('active');
+    $('.text-panel').toggleClass('editing');
 };
 
 function setFormatsMessage(){
@@ -243,7 +285,10 @@ function init(){
     loadFileName();
     setFormatsMessage();
     adjustEditorHeight();
+    placeTextPanel();
     dragListener();
+    initWordCount();
+    initWatchFormatting();
     setStartButton();
 }
 
@@ -252,6 +297,7 @@ init();
 $(window).resize(function() {
     adjustEditorHeight();
     adjustPlayerWidth();
+    placeTextPanel();
 });
 
 
@@ -356,10 +402,7 @@ $(window).resize(function() {
     $('#attach').change(function() {
         reactToFile(this);
     });    
-    // $('.timestamp').click(function(){
-    //     setFromTimestamp( $(this) );
-    // });    
-    
+
 
 // End UI
 
@@ -384,3 +427,22 @@ function setFromTimestamp(clickts, element){
         document.getElementById('audio').currentTime = splitTimestamp(clickts);
     }
 }
+
+
+function getTimestamp(){
+    // get timestap
+    var time = document.getElementById('audio').currentTime  
+    var minutes = Math.floor(time / 60);
+    var seconds = ("0" + Math.round( time - minutes * 60 ) ).slice(-2);
+    return minutes+":"+seconds;
+};
+
+function insertTimestamp(){
+    document.execCommand('insertHTML',false,
+    '<span class="timestamp" contenteditable="false" data="hi" onclick="var x = this; setFromTimestamp(\'' + getTimestamp() + '\', x);">' + getTimestamp() + '</span>&nbsp;'
+    );
+    $('.timestamp').each(function( index ) {
+        $( this )[0].contentEditable = false;
+    });
+}
+
