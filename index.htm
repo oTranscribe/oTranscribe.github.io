@@ -185,8 +185,13 @@
     </div>
     <div class="export-panel">
         <div class="export-title">Download transcript as...</div>
-        <a class="export-block-md" id="x-md">Markdown (.md)</a>
-        <a class="export-block-txt" id="x-txt">Plain text (.txt)</a>
+        <a class="export-block-md" id="x-md" target="_blank">Markdown (.md)</a>
+        <a class="export-block-txt" id="x-txt" target="_blank">Plain text (.txt)</a>
+        <div class="export-title">Send transcript to...</div>
+        <a class="export-block-gd unauth" id="x-gd" target="_blank" href="javascript:void(0);">
+            Google Drive
+            <div class="sign-in" id="x-gd-sign">Sign in</div>
+        </a>
         <p>The export function is still experimental. If you notice an error, please <a href="mailto:mail@elliotbentley.com">email</a> with details, including your browser and OS.</p>
     </div>
 </div>
@@ -196,8 +201,9 @@
 
 <script src="//cdn.jsdelivr.net/audiojs/0.1/audio.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="script.js"></script>
+<script src="https://apis.google.com/js/client.js?onload=gd.handleClientLoad" type="text/javascript"></script>
 
-<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
 
 
 <script type="text/javascript">
