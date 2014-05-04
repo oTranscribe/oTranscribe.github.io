@@ -791,7 +791,8 @@ oT.lang.langs = {
     'en': 'English',
     'pirate': 'Pirate',
     'es': 'Español',
-    'fr': 'Français'
+    'fr': 'Français',
+    'nl': 'Nederlands'
 }
 
 oT.lang.setLang = function(lang){
