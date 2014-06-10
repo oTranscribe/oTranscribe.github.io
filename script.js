@@ -617,7 +617,7 @@ oT.backup.save = function(){
     // save current text to timestamped localStorage item
     var text = document.getElementById("textbox");
     var timestamp = new Date().getTime();
-    oT.backup.saveToLocalStorage('oTranscribe-backup-'+timestamp, text.innerHTML);
+    localStorage.setItem('oTranscribe-backup-'+timestamp, text.innerHTML);
     // and bleep icon
     $('.sbutton.backup').addClass('flash');
     setTimeout(function(){
@@ -633,18 +633,6 @@ oT.backup.save = function(){
     },'slow',function(){
         $( newBlock ).find('.backup-restore-button').fadeIn();
     });
-    
-}
-
-oT.backup.saveToLocalStorage = function(key,value){
-    try {
-       localStorage.setItem( key, value );
-    } catch (e) {
-       if (e.name === "NS_ERROR_DOM_QUOTA_REACHED") {
-           oT.backup.removeOldest();
-           oT.backup.save();
-       }
-    }
     
 }
 
@@ -688,29 +676,17 @@ oT.backup.cleanup = function(){
     }
 }
 
-oT.backup.removeOldest = function(){
-
-    var list = oT.backup.list();
-    var toDelete = list.slice(Math.max(list.length - 5, 1));
-    for (var i = 0; i < toDelete.length; i++) {
-        localStorage.removeItem( toDelete[i] );
-    	localStorage.clear( toDelete[i] );
-    }
-}
-
 // original autosave function
 function saveText(){
     var field = document.getElementById("textbox");
     // load existing autosave (if present)
-    if ( localStorage.getItem("autosave")) {        
+    if ( localStorage.getItem("autosave")) {
        field.innerHTML = localStorage.getItem("autosave");
     }
     // autosave every second - but wait five seconds before kicking in
     setTimeout(function(){
-        // prevent l10n from replacing user text
-        $('#textbox p[data-l10n-id]').attr('data-l10n-id','');
         setInterval(function(){
-           oT.backup.saveToLocalStorage("autosave", field.innerHTML);
+           localStorage.setItem("autosave", field.innerHTML);
         }, 1000);
     }, 5000);
 }
