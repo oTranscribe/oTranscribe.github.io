@@ -192,10 +192,19 @@ var oT = {};
 oT.media = {};
 
 oT.media.e = function(){
-    return document.getElementById('media') || null;
+    var element = document.getElementById('media');
+    if (element.tagName === 'IFRAME') {
+        return oT.media.ytEl;
+    }
+    return element || null;
 }
 
 oT.media.create = function(file){
+    
+    if (file.indexOf && file.indexOf('youtube') > -1) {
+        oT.media.yt(file);
+        return;
+    }
 
     if (window.webkitURL) {
         var url = window.webkitURL.createObjectURL(file);
@@ -218,6 +227,16 @@ oT.media.create = function(file){
 
 }
 
+oT.media.skipTo = function(time){
+    var element = oT.media.e();
+    var yt = !!oT.media.ytEl;
+    if (yt) {
+        element.seekTo( time );
+    } else {
+       element.currentTime = time;
+    }    
+}
+
 oT.media.playPause = function(){
     var element = oT.media.e();
     var playing = !element.paused;
@@ -226,7 +245,7 @@ oT.media.playPause = function(){
         element.pause();
         playPauseButton.removeClass('playing');
     } else {
-        element.currentTime = element.currentTime-1.5;
+        oT.media.skip('backwards');
         element.play();
         playPauseButton.addClass('playing');
     };
@@ -235,17 +254,18 @@ oT.media.playPause = function(){
 
 oT.media.skip = function(direction){
     var element = oT.media.e();
-    if (direction == "forwards"){
-        element.currentTime = element.currentTime+1.5;
-    } else if (direction == "backwards") {
-        element.currentTime = element.currentTime-1.5;
+    var yt = !!oT.media.ytEl;
+    var mod = 1;
+    if (direction == "backwards"){
+        mod = -1;
     }
+    oT.media.skipTo( element.currentTime + (1.5*mod) );
 }
 
 oT.media.speed = function(newSpeed){
     var min = 0.5;
     var max = 2;
-    var step = 0.25;
+    var step = oT.media.speedIncrement || 0.25;
     var newSpeedNumber;
     var currentSpeed = oT.media.e().playbackRate;
     if ((newSpeed == "up") && (currentSpeed < max)){
@@ -259,6 +279,9 @@ oT.media.speed = function(newSpeed){
     }
     if (typeof(newSpeedNumber) != "undefined") {
         oT.media.e().playbackRate = newSpeedNumber;
+        if (oT.media.e().setPlaybackRate) {
+            oT.media.e().setPlaybackRate(newSpeedNumber);
+        }
         document.getElementById('slider3').value = newSpeedNumber;        
     }
 }
@@ -285,6 +308,221 @@ oT.media.initProgressor = function(){
     });
 }
 
+oT.media.disableSpeed = function(){
+    $('.speed-box').html('This media only supports 1x playback rate. Sorry.');
+    oT.media.speed = function(){
+        return false;
+    }
+};
+
+oT.media.yt = function(url){
+    oT.media.yt.url = url;
+    // import YouTube API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    
+    var video = document.createElement('div');
+    video.setAttribute('id','media');
+    document.body.appendChild(video); 
+    
+    function youtube_parser(url){
+        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        var match = url.match(regExp);
+        if (match&&match[2].length==11){
+            return match[2];
+        }else{
+            alert(url);
+        }
+    }
+    
+    setInterval(function(){
+        var $ifr = $('iframe#media');
+        $ifr.width(oT.media.videoWidth); 
+        $ifr.height( $ifr.width() * (3/4) );
+    },500);
+    
+    function youtubeReady() {        
+        
+        var videoId = youtube_parser(oT.media.yt.url);
+        oT.media.ytEl = new YT.Player('media', {
+            width: '100%',
+            videoId: videoId,
+            playerVars: {
+                // controls: 0,
+                disablekb: 1,
+                fs: 0,
+                rel: 0,
+                modestbranding: 1
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': updatePause
+            }
+        });
+        
+        function updatePause (ev){
+            var status = ev.data;
+            if (status === 2) {
+                oT.media.ytEl.paused = true;
+            } else {
+                oT.media.ytEl.paused = false;
+            }
+        }
+        
+        oT.media.yt.setTitle(videoId);
+        
+        oT.media.ytEl.play = function(){
+            oT.media.ytEl.playVideo()
+        };
+        oT.media.ytEl.pause = function(){
+            oT.media.ytEl.pauseVideo(); 
+        }
+        oT.media.ytEl.paused = true;
+        
+        setInterval(function(){
+            oT.media.ytEl.currentTime = oT.media.ytEl.getCurrentTime();
+        },200);
+        
+        // YouTube embeds can't do 0.25 increments
+        $('#slider3').attr('step',0.5);
+        oT.media.speedIncrement = 0.5;
+        
+        function onPlayerReady(){
+            // fix non-responsive keyboard shortcuts bug
+            $('#slider3').val(0.5).change().val(1).change();        
+            
+            // Some YouTube embeds only support normal speed
+            if (oT.media.ytEl.getAvailablePlaybackRates()[0] === 1) {
+                oT.media.disableSpeed();
+            }
+        }
+    }    
+    window.onYouTubeIframeAPIReady = youtubeReady;
+}
+
+oT.media.yt.setTitle = function(id){
+    var url = 'http://gdata.youtube.com/feeds/api/videos/'+id+'?v=2&alt=json-in-script&callback=?';
+    $.ajax({
+       type: 'GET',
+        url: url,
+        async: false,
+        jsonpCallback: 'jsonCallback',
+        contentType: "application/json",
+        dataType: 'jsonp',
+        success: function(d) {
+            var title = '[YouTube] '+d.entry.title.$t;
+            oT.media.e().title = title;
+            oT.input.saveFileDetails({
+                name: title,
+                source: 'https://www.youtube.com/watch?v='+id
+            })
+            $('#player-hook').html(title).addClass('media-title');
+            adjustPlayerWidth();
+        }
+    });
+}
+
+
+oT.input = {};
+oT.input.reactToFile = function(input){
+    var file = input.files[0];
+    if ( checkTypeSupport( file ) === true ){
+        oT.media.create( file );
+        oT.media.initProgressor();
+        inputToEditor();
+        adjustPlayerWidth();
+        oT.input.saveFileDetails(file.name);
+    } else {
+        var msg = document.webL10n.get('format-warn');
+        msg = msg.replace('[file-format]',file.type.split("/")[1]);
+        $('#formats').html(msg).addClass('warning');
+    }
+}
+
+oT.input.askForYoutube = function(){
+    $('.input').addClass('ext-input');
+    
+    var $form = $('.ext-input input');
+    $form.focus();
+    $form.keypress(function (e) {
+      if (e.which == 13) {
+        oT.input.reactToYoutube( $(this).val() );
+        return false;
+      }
+    });
+    
+}
+
+oT.input.reactToYoutube = function(url){
+    console.log(url);
+    if ( url.indexOf('youtube') > -1 ){
+        oT.input.processYoutube( url );
+    } else {
+        var msg = 'Please enter a valid YouTube URL. For example: https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        $('.ext-input-warning').text(msg).show();
+    }
+}
+
+oT.input.returnToNormal = function(){
+    $('.input').removeClass('ext-input');
+}
+
+oT.input.processYoutube = function(url){
+    inputToEditor();
+    $('#player-time').hide();
+    oT.media.create( url );
+}
+
+oT.input.loadPreviousFileDetails = function(){
+    if ( localStorage.getItem("oT-lastfile") ) {
+        var lastFile = JSON.parse( localStorage.getItem("oT-lastfile") );
+        var lastfileText = document.webL10n.get('last-file');
+        console.log(lastFile.source);
+        if (lastFile.name === undefined) {
+            document.getElementById("lastfile").innerHTML = lastfileText+' '+lastFile;
+        } else if (lastFile.source === '') {
+            document.getElementById("lastfile").innerHTML = lastfileText+' '+lastFile.name;
+        } else {
+            var el = document.getElementById("lastfile");
+            el.innerHTML = lastfileText+' <span class="media-reload">'+lastFile.name+'</span>';
+            el.addEventListener('click',function(){ 
+                oT.input.processYoutube( lastFile.source );
+            });
+        }
+    }    
+}
+
+oT.input.saveFileDetails = function(fileDetails){
+    var obj = fileDetails;
+    if (typeof file === 'string') {
+        obj = {
+            name: fileDetails,
+            source: ''
+        }
+    }
+    localStorage.setItem("oT-lastfile", JSON.stringify( obj ));
+}
+
+oT.input.dragListener = function(){
+    var button = $('.file-input-wrapper')[0];
+    button.addEventListener('dragover', function(){
+        $('.file-input-wrapper').addClass('hover');
+    }, false);
+    button.addEventListener('dragleave', function(){
+        $('.file-input-wrapper').removeClass('hover');
+    }, false);
+    
+}
+
+
+function inputToEditor(){
+    $('.topbar').removeClass('inputting');
+    $('.input').removeClass('active');
+    $('.sbutton.time').addClass('active');
+    $('.text-panel').addClass('editing');
+};
 
 /******************************************
                Text editor
@@ -377,29 +615,6 @@ function initWatchFormatting(){
 
 
 
-/******************************************
-                Timestamp
-******************************************/
-
-function loadFileName(){
-    // load existing file name
-    if ( localStorage.getItem("lastfile") ) {
-        var lastfileText = document.webL10n.get('last-file');
-       document.getElementById("lastfile").innerHTML = lastfileText+" "+localStorage.getItem("lastfile");
-    }    
-}
-
-function dragListener(){
-    var button = $('.file-input-wrapper')[0];
-    button.addEventListener('dragover', function(){
-        $('.file-input-wrapper').addClass('hover');
-    }, false);
-    button.addEventListener('dragleave', function(){
-        $('.file-input-wrapper').removeClass('hover');
-    }, false);
-    
-}
-
 
 /******************************************
                 Other
@@ -452,29 +667,6 @@ function checkTypeSupport(file){
     var a = document.createElement(fileType);
     return !!(a.canPlayType && a.canPlayType(file.type).replace(/no/, ''));
 }
-
-function reactToFile(input){
-    var file = input.files[0];
-    if ( checkTypeSupport( file ) === true ){
-        oT.media.create( file );
-        oT.media.initProgressor();
-        toggleControls();
-        adjustPlayerWidth();
-        localStorage.setItem("lastfile", file.name);
-    } else {
-        var msg = document.webL10n.get('format-warn');
-        msg = msg.replace('[file-format]',file.type.split("/")[1]);
-        $('#formats').html(msg).addClass('warning');
-    }
-    
-}
-
-function toggleControls(){
-    $('.topbar').toggleClass('inputting');
-    $('.input').toggleClass('active');
-    $('.sbutton.time').toggleClass('active');
-    $('.text-panel').toggleClass('editing');
-};
 
 function setFormatsMessage(){
     var text = document.webL10n.get('formats');
@@ -533,8 +725,6 @@ function chromeOsCheck(){
         });
     }
 }
-
-
 
 oT.backup = {};
 
@@ -725,7 +915,7 @@ function init(){
     oT.backup.init();
     adjustEditorHeight();
     placeTextPanel();
-    dragListener();
+    oT.input.dragListener();
     initWordCount();
     initWatchFormatting();
     chromeOsCheck();
@@ -735,7 +925,7 @@ window.addEventListener('localized', function() {
     setFormatsMessage();
     setStartButton();
     oldBrowserCheck();
-    loadFileName();
+    oT.input.loadPreviousFileDetails();
     $('#curr-lang').text( oT.lang.langs[document.webL10n.getLanguage()] );
 }, false);
 
@@ -1097,8 +1287,16 @@ window.oT.lang = oT.lang;
     });
     
     $('#attach').change(function() {
-        reactToFile(this);
+        oT.input.reactToFile(this);
     });    
+    
+    $('.yt-input').click(function(){
+        oT.input.askForYoutube();
+    })
+    
+    $('.close-ext-input').click(function(){
+        oT.input.returnToNormal();
+    });
 
     $('.sbutton.export').click(function() {
         placeExportPanel();
@@ -1151,14 +1349,14 @@ var ts = {
     },
     setFrom : function(clickts, element){
         if (element.childNodes.length == 1) {
-            oT.media.e().currentTime = ts.split(clickts);
+            oT.media.skipTo( ts.split(clickts) );
         }
     },
     get : function(){
         // get timestap
         var time = oT.media.e().currentTime  
         var minutes = Math.floor(time / 60);
-        var seconds = ("0" + Math.round( time - minutes * 60 ) ).slice(-2);
+        var seconds = ("0" + Math.floor( time - minutes * 60 ) ).slice(-2);
         return minutes+":"+seconds;
     },
     insert : function(){
