@@ -1346,9 +1346,11 @@ oT.export.createJsonFile = function(){
     result.text = oT.export.asFormat('html');
     if (oT.player !== null){
         result.media = oT.player.title;
-        result['media-time'] = oT.player.getTime();
+        if (oT.player.getTime) {
+            result['media-time'] = oT.player.getTime();
+        }
         if (oT.media.ytEl) {
-            result['media-source'] = oT.media.ytEl.getVideoUrl();
+            result['media-source'] = oT.media._ytEl.getVideoUrl();
         } else {
             result['media-source'] = '';
         }
@@ -1368,8 +1370,10 @@ oT.lang.langs = {
     'es': 'Español',
     'fr': 'Français',
     'nl': 'Nederlands',
-    'ja': '日本語',
-    'pl': 'Polski'
+    'pl': 'Polski',
+    'zh-hant': '繁體中文',
+    'zh-hans': '简体中文',
+    'ja': '日本語'
 }
 
 oT.lang.setLang = function(lang){
