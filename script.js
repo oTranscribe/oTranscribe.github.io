@@ -190,84 +190,127 @@ var oT = {};
     
 
 oT.media = {};
+oT.player = function(){};
+oT.player.playPause = function(){};
+oT.player.skipTo = function(){};
+oT.player.skip = function(){};
+oT.player.speed = function(){};
 
-oT.media.e = function(){
-    var element = document.getElementById('media');
-    if (element.tagName === 'IFRAME') {
-        return oT.media.ytEl;
-    }
-    return element || null;
+oT.media.create = function(opts){
+    oT.media.reset();
+    oT.input.hide();
+    oT.player = new oT.playerObj(opts);
 }
 
-oT.media.create = function(file){
-    
-    if (file.indexOf && file.indexOf('youtube') > -1) {
-        oT.media.yt(file);
-        return;
+oT.playerObj = function(opts){
+    var that = this;
+    this.file = opts.file;
+    if (opts.startpoint) {
+        this._startPoint = opts.startpoint;
     }
+    if (this.file.indexOf && oT.media.ytParse(this.file)) {
+        this.format = 'youtube';
+        $('#player-time').hide();
+        this._buildYoutube();
+    } else {
+        var url = this._createObjectURL(opts.file);
+        if ( this.file.type.indexOf("video") > -1 ) {
+            this._buildVideo(url);
+            this.format = 'video';
+        } else {
+            this._buildAudio(url);
+            this.format = 'audio';
+        }
+        this.title = this.file.name;
+        this._initProgressor();
+    }
+    this.paused = true;
+}
+oT.playerObj.prototype._initProgressor = function(){
+    this.progressBar = new Progressor({
+        media : this.element,
+        bar : $('#player-hook')[0],
+        text : this.title,
+        time : $('#player-time')[0]
+    });
+}
 
+oT.playerObj.prototype._createObjectURL = function(file){
     if (window.webkitURL) {
-        var url = window.webkitURL.createObjectURL(file);
+        return window.webkitURL.createObjectURL(file);
     } else {
-        var url = window.URL.createObjectURL(file);      
+        return window.URL.createObjectURL(file);      
     }
-
-    if ( file.type.indexOf("video") > -1 ) {
-        var video = document.createElement('video');
-        video.src = url;
-        video.id = "media";
-        video.style.width = oT.media.videoWidth();
-        document.body.appendChild(video); 
-    } else {
-        $('#player-hook').append('<audio id="media" src=""></audio>');
-        oT.media.e().src = url;            
-    }
-    
-    oT.media.e().title = file.name;
-
 }
-
-oT.media.skipTo = function(time){
-    var element = oT.media.e();
-    var yt = !!oT.media.ytEl;
-    if (yt) {
-        element.seekTo( time );
-    } else {
-       element.currentTime = time;
-    }    
+oT.playerObj.prototype._buildVideo = function(url){
+    this.element = document.createElement('video');
+    this.element.src = url;
+    this.element.id = "media";
+    this.element.style.width = oT.media.videoWidth();
+    document.body.appendChild(this.element); 
 }
-
-oT.media.playPause = function(){
-    var element = oT.media.e();
-    var playing = !element.paused;
+oT.playerObj.prototype._buildAudio = function(url){
+    this.element = document.createElement('audio');
+    this.element.src = url;
+    this.element.id = "media";
+    $('#player-hook').append(this.element);
+}
+oT.playerObj.prototype.remove = function(){
+    $(this.element).remove();
+}
+oT.playerObj.prototype.pause = function(){
     var playPauseButton = $('.play-pause');
-    if (playing == true){
-        element.pause();
-        playPauseButton.removeClass('playing');
+    playPauseButton.removeClass('playing');
+    if(this.format === 'youtube') {
+        this._ytEl.pauseVideo();
     } else {
-        oT.media.skip('backwards');
-        element.play();
-        playPauseButton.addClass('playing');
-    };
-    
+        this.element.pause();
+    }
+    this.paused = true;
 }
-
-oT.media.skip = function(direction){
-    var element = oT.media.e();
-    var yt = !!oT.media.ytEl;
+oT.playerObj.prototype.play = function(){
+    var playPauseButton = $('.play-pause');
+    this.skip('backwards');
+    playPauseButton.addClass('playing');
+    if(this.format === 'youtube') {
+        this._ytEl.playVideo();
+    } else {
+        this.element.play();
+    }
+    this.paused = false;
+}
+oT.playerObj.prototype.playPause = function(){
+    if (this.paused === false){
+        this.pause();
+    } else {
+        this.play();
+    };    
+}
+oT.playerObj.prototype.skipTo = function(time){
+    if (this.format === 'youtube') {
+        this._ytEl.seekTo( time );
+    } else {
+       this.element.currentTime = time;
+    }    
+    
+};
+oT.playerObj.prototype.skip = function(direction){
     var mod = 1;
     if (direction == "backwards"){
         mod = -1;
     }
-    oT.media.skipTo( element.currentTime + (1.5*mod) );
+    this.skipTo( this.element.currentTime + (1.5*mod) );
 }
-
-oT.media.speed = function(newSpeed){
+oT.playerObj.prototype.speed = function(newSpeed){
+    var el = this.element;
+    if (this.format === 'youtube') {
+        el = this._ytEl;
+    }
     var min = 0.5;
     var max = 2;
     var step = oT.media.speedIncrement || 0.25;
     var newSpeedNumber;
-    var currentSpeed = oT.media.e().playbackRate;
+    var currentSpeed = this.element.playbackRate;
     if ((newSpeed == "up") && (currentSpeed < max)){
         newSpeedNumber = currentSpeed+step;
     } else if ((newSpeed == "down") && (currentSpeed > min)){
@@ -278,11 +321,37 @@ oT.media.speed = function(newSpeed){
         newSpeedNumber = newSpeed;
     }
     if (typeof(newSpeedNumber) != "undefined") {
-        oT.media.e().playbackRate = newSpeedNumber;
-        if (oT.media.e().setPlaybackRate) {
-            oT.media.e().setPlaybackRate(newSpeedNumber);
+       el.playbackRate = newSpeedNumber;
+        if (el.setPlaybackRate) {
+            el.setPlaybackRate(newSpeedNumber);
         }
         document.getElementById('slider3').value = newSpeedNumber;        
+    }
+}
+oT.playerObj.prototype.getTime = function(){
+    return this.element.currentTime;
+}
+oT.playerObj.prototype.getDuration = function(){
+    return this.element.duration;
+}
+
+oT.playerObj.prototype.reset = function(){
+    $('#media').remove();
+    $('#player-time').show();
+    $('#player-hook').removeClass('progressor media-title media-titleprogressor').empty();    
+}
+
+
+
+oT.media.reset = function(options){
+    options = options || {};
+    if (oT.player.reset) {
+        oT.player.reset();
+        oT.player = {};
+    }
+    if (options.input) {
+        oT.input.loadPreviousFileDetails();
+        oT.input.show();
     }
 }
 
@@ -299,15 +368,6 @@ oT.media.initAudioJS = function(){
     });
 }
 
-oT.media.initProgressor = function(){
-    var p = new Progressor({
-        media : oT.media.e(),
-        bar : $('#player-hook')[0],
-        text : oT.media.e().title,
-        time : $('#player-time')[0]
-    });
-}
-
 oT.media.disableSpeed = function(){
     $('.speed-box').html('This media only supports 1x playback rate. Sorry.');
     oT.media.speed = function(){
@@ -315,94 +375,115 @@ oT.media.disableSpeed = function(){
     }
 };
 
-oT.media.yt = function(url){
-    oT.media.yt.url = url;
-    // import YouTube API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+oT.playerObj.prototype._youtubeReady = function(){
+    var that = this;
+
+    var videoId = oT.media.ytParse(this.file);
+    console.log('YT',YT);
+    this._ytEl = new YT.Player('media', {
+        width: '100%',
+        videoId: videoId,
+        playerVars: {
+            // controls: 0,
+            disablekb: 1,
+            fs: 0,
+            rel: 0,
+            modestbranding: 1
+        },
+        events: {
+            'onReady': this._youtubeReadyPartTwo.bind(this),
+            'onStateChange': updatePause
+        }
+    });
     
-    var video = document.createElement('div');
-    video.setAttribute('id','media');
-    document.body.appendChild(video); 
+    this._setYoutubeTitle(videoId);
+        
+    setInterval(function(){
+        that.element.currentTime = that._ytEl.getCurrentTime();
+    },200);
     
-    function youtube_parser(url){
-        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        var match = url.match(regExp);
-        if (match&&match[2].length==11){
-            return match[2];
-        }else{
-            alert(url);
+    // YouTube embeds can't do 0.25 increments
+    $('#slider3').attr('step',0.5);
+    oT.media.speedIncrement = 0.5;
+    
+    function updatePause (ev){
+        var status = ev.data;
+        if (status === 2) {
+            this.paused = true;
+        } else {
+            this.paused = false;
         }
     }
     
+}
+
+oT.playerObj.prototype._youtubeReadyPartTwo = function(){
+    // fix non-responsive keyboard shortcuts bug
+    $('#slider3').val(0.5).change().val(1).change();
+    
+    // Some YouTube embeds only support normal speed
+    if (this._ytEl.getAvailablePlaybackRates()[0] === 1) {
+        oT.media.disableSpeed();
+    }
+    
+    this.element.duration = this._ytEl.getDuration()
+
+    var that = this;
+
+    // kickstart youtube
+    this.play();
+    setTimeout(function(){
+        that.pause();
+        if (oT.media.startPoint) {
+            setTimeout(function(){
+                that.seekTo( oT.media.startPoint );
+            },500);
+        }
+    },500);
+}
+
+
+oT.playerObj.prototype._buildYoutube = function(url){
+    this.url = url;
+    
+    this.element = document.createElement('div');
+    this.element.setAttribute('id','media');
+    document.body.appendChild(this.element); 
+        
     setInterval(function(){
         var $ifr = $('iframe#media');
         $ifr.width(oT.media.videoWidth); 
         $ifr.height( $ifr.width() * (3/4) );
     },500);
     
-    function youtubeReady() {        
-        
-        var videoId = youtube_parser(oT.media.yt.url);
-        oT.media.ytEl = new YT.Player('media', {
-            width: '100%',
-            videoId: videoId,
-            playerVars: {
-                // controls: 0,
-                disablekb: 1,
-                fs: 0,
-                rel: 0,
-                modestbranding: 1
-            },
-            events: {
-                'onReady': onPlayerReady,
-                'onStateChange': updatePause
-            }
-        });
-        
-        function updatePause (ev){
-            var status = ev.data;
-            if (status === 2) {
-                oT.media.ytEl.paused = true;
-            } else {
-                oT.media.ytEl.paused = false;
-            }
-        }
-        
-        oT.media.yt.setTitle(videoId);
-        
-        oT.media.ytEl.play = function(){
-            oT.media.ytEl.playVideo()
-        };
-        oT.media.ytEl.pause = function(){
-            oT.media.ytEl.pauseVideo(); 
-        }
-        oT.media.ytEl.paused = true;
-        
-        setInterval(function(){
-            oT.media.ytEl.currentTime = oT.media.ytEl.getCurrentTime();
-        },200);
-        
-        // YouTube embeds can't do 0.25 increments
-        $('#slider3').attr('step',0.5);
-        oT.media.speedIncrement = 0.5;
-        
-        function onPlayerReady(){
-            // fix non-responsive keyboard shortcuts bug
-            $('#slider3').val(0.5).change().val(1).change();        
-            
-            // Some YouTube embeds only support normal speed
-            if (oT.media.ytEl.getAvailablePlaybackRates()[0] === 1) {
-                oT.media.disableSpeed();
-            }
-        }
-    }    
-    window.onYouTubeIframeAPIReady = youtubeReady;
+    // import YouTube API
+    if ( $('#youtube-script').length === 0) {
+        console.log('no');
+        var tag = document.createElement('script');
+        tag.setAttribute('id','youtube-script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } else {
+        console.log('yes');
+        this._youtubeReady(this);
+    }
+    window.onYouTubeIframeAPIReady = this._youtubeReady.bind(this);        
 }
 
-oT.media.yt.setTitle = function(id){
+oT.media.ytParse = function(url){
+    console.log(url);
+    if (url.match) {
+        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        var match = url.match(regExp);
+        if (match&&match[2].length==11){
+            return match[2];
+        }
+    }
+    return false;
+}
+
+oT.playerObj.prototype._setYoutubeTitle = function(id){
     var url = 'http://gdata.youtube.com/feeds/api/videos/'+id+'?v=2&alt=json-in-script&callback=?';
     $.ajax({
        type: 'GET',
@@ -413,13 +494,17 @@ oT.media.yt.setTitle = function(id){
         dataType: 'jsonp',
         success: function(d) {
             var title = '[YouTube] '+d.entry.title.$t;
-            oT.media.e().title = title;
+            this.title = title;
             oT.input.saveFileDetails({
                 name: title,
                 source: 'https://www.youtube.com/watch?v='+id
-            })
+            });
+            console.log( $('#player-hook') );
             $('#player-hook').html(title).addClass('media-title');
             adjustPlayerWidth();
+        },
+        error: function(e){
+            console.log(e);
         }
     });
 }
@@ -429,9 +514,7 @@ oT.input = {};
 oT.input.reactToFile = function(input){
     var file = input.files[0];
     if ( checkTypeSupport( file ) === true ){
-        oT.media.create( file );
-        oT.media.initProgressor();
-        inputToEditor();
+        oT.media.create( { file: file } );
         adjustPlayerWidth();
         oT.input.saveFileDetails(file.name);
     } else {
@@ -456,9 +539,9 @@ oT.input.askForYoutube = function(){
 }
 
 oT.input.reactToYoutube = function(url){
-    console.log(url);
-    if ( url.indexOf('youtube') > -1 ){
+    if ( oT.media.ytParse(url) ){
         oT.input.processYoutube( url );
+        $('.input').removeClass('ext-input');
     } else {
         var msg = 'Please enter a valid YouTube URL. For example: https://www.youtube.com/watch?v=dQw4w9WgXcQ'
         $('.ext-input-warning').text(msg).show();
@@ -470,16 +553,13 @@ oT.input.returnToNormal = function(){
 }
 
 oT.input.processYoutube = function(url){
-    inputToEditor();
-    $('#player-time').hide();
-    oT.media.create( url );
+    oT.media.create( {file: url} );
 }
 
 oT.input.loadPreviousFileDetails = function(){
     if ( localStorage.getItem("oT-lastfile") ) {
         var lastFile = JSON.parse( localStorage.getItem("oT-lastfile") );
         var lastfileText = document.webL10n.get('last-file');
-        console.log(lastFile.source);
         if (lastFile.name === undefined) {
             document.getElementById("lastfile").innerHTML = lastfileText+' '+lastFile;
         } else if (lastFile.source === '') {
@@ -516,19 +596,122 @@ oT.input.dragListener = function(){
     
 }
 
+oT.input.show = function(){
+    $('.topbar').addClass('inputting');
+    $('.input').addClass('active');
+    $('.sbutton.time').removeClass('active');
+    $('.text-panel').removeClass('editing');
+    
+}
 
-function inputToEditor(){
+
+oT.input.hide = function(){
     $('.topbar').removeClass('inputting');
     $('.input').removeClass('active');
     $('.sbutton.time').addClass('active');
     $('.text-panel').addClass('editing');
 };
 
+oT.message = {}
+
+oT.message.header = function(msg){
+    $('.message-panel .message-content').html( msg );
+    $('.message-panel').removeClass('hidden');
+}
+
+oT.message.close = function(){
+    $('.message-panel').addClass('hidden');
+}
+
+
+oT.import = {}
+
+oT.import.loadFile = function( file ){
+    
+    try {
+        file = JSON.parse(file);    
+        oT.import.replaceTranscriptTextWith(file.text);
+        oT.import.remindOfMediaFile(file.media, file['media-source'], file['media-time']);
+    } catch (e) {
+        alert('This is not a valid oTranscribe format (.otr) file.');
+    }
+}
+
+oT.import.replaceTranscriptTextWith = function( newText ){
+    
+    // TODO: CLEAN STRING
+    newText = oT.import.clean(newText);
+    
+    var $textbox = $("#textbox");
+    
+    $textbox.fadeOut(300,function(){
+        if (typeof newText === 'string') {
+            $textbox[0].innerHTML = newText;
+        } else {
+            textbox[0].innerHTML = '';
+            $textbox[0].appendChild(newText);    
+        }
+        oT.timestamp.activate();
+        $('.textbox-container').scrollTop(0)
+        $(this).fadeIn(300);
+    });
+    
+}
+
+oT.import.remindOfMediaFile = function( filename, filesource, filetime ){
+    if (filename && filename !== '') {
+        // var lastfileText = document.webL10n.get('last-file');
+        var lastfileText = 'File last used with imported document:';
+        var restoreText = 'Restore';
+        if ((filesource) && (oT.media.ytParse(filesource))) {
+            oT.message.header( lastfileText+' <a href="#" id="restore-media">'+filename+'</a>' );
+            $('#restore-media').click(function(){
+                oT.media.create({file: filesource, startpoint: filetime});
+                return false;
+            });
+        } else {
+            oT.message.header(lastfileText+' '+filename);
+        }
+    }
+}
+
+oT.import.localButtonReaction = function( input ){
+    var file = input.files[0];
+    
+    var reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = function(e) { 
+        var contents = e.target.result;
+        oT.import.loadFile( contents );
+    }
+    
+    input.value = '';
+    
+    
+}
+
+oT.import.clean = function(text){
+    
+    text = oT.texteditor.clean(text);
+    
+    return text;
+}
+
 /******************************************
                Text editor
 ******************************************/
 
+oT.texteditor = {}
 
+oT.texteditor.clean = function( html ){
+    var result = $.htmlClean(html, {
+        format: false,
+        allowedTags: ['p', 'div', 'strong', 'em', 'i', 'b', 'span'],
+        allowedAttributes: [['class',['span']],['data-timestamp',['span']]],
+        allowedClasses: ['timestamp']
+    });
+    return result;
+}
 
 
 function adjustPlayerWidth(){
@@ -859,9 +1042,8 @@ oT.backup.list = function(){
 
 oT.backup.restore = function(timestamp){
     oT.backup.save();
-    var textbox = document.getElementById("textbox");
     var newText = localStorage.getItem('oTranscribe-backup-'+timestamp);
-    document.getElementById("textbox").innerHTML = newText;
+    oT.import.replaceTranscriptTextWith(newText);
     oT.backup.closePanel();
 }
 
@@ -919,6 +1101,7 @@ function init(){
     oT.input.dragListener();
     initWordCount();
     initWatchFormatting();
+    oT.timestamp.activate();
     chromeOsCheck();
 }
 
@@ -1072,30 +1255,46 @@ window.insertFile = function(callback) {
                  Export
 ******************************************/
 
-var exportText = {
-    md : function(){
+oT.export = {};
+
+oT.export.asFormat = function( format ){
+    if (format === 'md') {
         var p = document.getElementById('textbox').innerHTML;
-        var clean = $.htmlClean(p, {format:true, removeTags: ["div", "span", "img", "pre"]});
+        var clean = $.htmlClean(p, {format:true, removeTags: ["div", "span", "img", "pre", "text"]});
         var x = toMarkdown( clean );   
         return x.replace(/\t/gm,"");           
-    },
-    txt : function() {
+    } else if (format === 'txt') {
         var p = document.getElementById('textbox').innerHTML;
-        var clean = $.htmlClean(p, {format:true, removeTags:["div", "span", "img", "em", "strong", "p", "pre"]});
+        var clean = $.htmlClean(p, {format:true, removeTags:["div", "span", "img", "em", "strong", "p", "pre", "text"]});
         return clean.replace(/\t/gm,"");
-    },
+    } else if (format === 'html') {
+        var p = document.getElementById('textbox').innerHTML;
+        return p.replace('\n','');
+    }
+}
+
+oT.export.placeButton = function ( format ){
+    if (format === 'otr') {
+        var doc = oT.export.createJsonFile();
+        var a = document.getElementById('x-otr');
+        a.download = exportText.name() + ".otr";
+        a.href = "data:text/plain;base64," + exportText.utf8_to_b64( doc );
+    }
+}
+
+var exportText = {
     utf8_to_b64 : function( str ) {
         return window.btoa(unescape(encodeURIComponent( str )));
     },
     // element choose element to append button to
     mdButton : function(element) {
-        var md = exportText.md();
+        var md = oT.export.asFormat('md');
         var a = document.getElementById('x-md');
         a.download = exportText.name() + ".md";
         a.href = "data:text/plain;base64," + exportText.utf8_to_b64( md );
     },
     txtButton : function(element) {
-        var txt = exportText.txt();
+        var txt = oT.export.asFormat('txt');
         var a = document.getElementById('x-txt');
         a.download = exportText.name() + ".txt";
         a.href = "data:text/plain;base64," + exportText.utf8_to_b64( txt );
@@ -1111,11 +1310,12 @@ var exportText = {
 function placeExportPanel(){
     exportText.mdButton();
     exportText.txtButton();
+    oT.export.placeButton('otr');
     gd.handleClientLoad();
         
     var origin = $('#icon-exp').offset();
-    var right = parseInt( $('body').width() - origin.left - 35 );
-    var top = parseInt( origin.top ) + 50;
+    var right = parseInt( $('body').width() - origin.left + 25 );
+    var top = parseInt( origin.top ) - 50;
     $('.export-panel')
         .css({'right': right,'top': top})
         .addClass('active'); 
@@ -1141,6 +1341,24 @@ exportText.reader= function(){
 }
 
 
+oT.export.createJsonFile = function(){
+    var result = {};
+    result.text = oT.export.asFormat('html');
+    if (oT.player !== null){
+        result.media = oT.player.title;
+        result['media-time'] = oT.player.getTime();
+        if (oT.media.ytEl) {
+            result['media-source'] = oT.media.ytEl.getVideoUrl();
+        } else {
+            result['media-source'] = '';
+        }
+    } else {
+        result.media = '';
+        result['media-source'] = '';
+        result['media-time'] = '';
+    }
+    return JSON.stringify(result);
+};
 
 oT.lang = {};
 
@@ -1202,32 +1420,32 @@ window.oT.lang = oT.lang;
 
     Mousetrap.bind('escape', function(e) {
         pd(e);
-        oT.media.playPause();
+        oT.player.playPause();
         return false;
     });
     Mousetrap.bind('f1', function(e) {
         pd(e);
-        oT.media.skip('backwards');
+        oT.player.skip('backwards');
         return false;
     });
     Mousetrap.bind('f2', function(e) {
         pd(e);
-        oT.media.skip('forwards');
+        oT.player.skip('forwards');
         return false;
     });
     Mousetrap.bind('f3', function(e) {
         pd(e);
-        oT.media.speed('down');
+        oT.player.speed('down');
         return false;
     });
     Mousetrap.bind('f4', function(e) {
         pd(e);
-        oT.media.speed('up');
+        oT.player.speed('up');
         return false;
     });
     Mousetrap.bind('mod+j', function(e) {
         pd(e);
-        ts.insert();
+        oT.timestamp.insert();
         return false;
     });
     Mousetrap.bind('mod+s', function(e) {
@@ -1250,14 +1468,17 @@ window.oT.lang = oT.lang;
 
 
     $('.play-pause').click(function(){
-        oT.media.playPause();    
+        oT.player.playPause();    
     });
 
     $('.skip-backwards').click(function(){
-        oT.media.skip('backwards');    
+        oT.player.skip('backwards');    
     });
     $('.skip-forwards').click(function(){
-        oT.media.skip('forwards');    
+        oT.player.skip('forwards');    
+    });
+    $('.button.reset').click(function(){
+        oT.media.reset({input: true});    
     });
 
     $( ".speed" ).click(function() {
@@ -1267,7 +1488,7 @@ window.oT.lang = oT.lang;
     });
 
     $( "#slider3" ).change(function() {
-      oT.media.speed(this.valueAsNumber);
+      oT.player.speed(this.valueAsNumber);
     });    
     
     $('.title').click(function(){
@@ -1291,6 +1512,10 @@ window.oT.lang = oT.lang;
     $('#attach').change(function() {
         oT.input.reactToFile(this);
     });    
+
+    $('#local-file-import').change(function() {
+        oT.import.localButtonReaction(this);
+    });        
     
     $('.yt-input').click(function(){
         oT.input.askForYoutube();
@@ -1328,6 +1553,9 @@ window.oT.lang = oT.lang;
          e.stopPropagation();
     });
     
+    $('.close-message-panel').click(function(){
+        oT.message.close();
+    })
     
 
 // End UI
@@ -1343,37 +1571,52 @@ window.oT.lang = oT.lang;
 ******************************************/
 
 
-var ts = {
-    split : function(hms){
+oT.timestamp = {
+    split: function(hms){
         var a = hms.split(':');
         var seconds = (+a[0]) * 60 + (+a[1]); 
         return seconds;
     },
-    setFrom : function(clickts, element){
-        if (element.childNodes.length == 1) {
-            oT.media.skipTo( ts.split(clickts) );
-        }
-    },
-    get : function(){
+    get: function(){
         // get timestap
-        var time = oT.media.e().currentTime  
+        if (!oT.player || !oT.player.getTime) {
+            return false;
+        }
+        var time = oT.player.getTime();
         var minutes = Math.floor(time / 60);
         var seconds = ("0" + Math.floor( time - minutes * 60 ) ).slice(-2);
         return minutes+":"+seconds;
     },
-    insert : function(){
-        document.execCommand('insertHTML',false,
-        '<span class="timestamp" contenteditable="false" onclick="var x = this; ts.setFrom(\'' + ts.get() + '\', x);">' + ts.get() + '</span>&nbsp;'
-        );
+    insert: function(){
+        var time = oT.timestamp.get();
+        if (time) {
+            document.execCommand('insertHTML',false,
+            '<span class="timestamp" contenteditable="false" data-timestamp="' + oT.timestamp.get() + '" >' + oT.timestamp.get() + '</span>&nbsp;'
+            );
+            oT.timestamp.activate();
+        }
+    },
+    activate: function(){
         $('.timestamp').each(function( index ) {
             $( this )[0].contentEditable = false;
+            $( this ).off().click(function(){
+                var time = $( this ).attr('data-timestamp') || $(this).text();
+                oT.player.skipTo( oT.timestamp.split(time) );
+            })
         });
     }
 }
 
-// backwards compatibility, as old timestamps use setFromTimestamp()
+// backwards compatibility, as old timestamps use setFromTimestamp() and ts.setFrom()
 function setFromTimestamp(clickts, element){
     ts.setFrom(clickts, element);
+}
+var ts = {
+    setFrom: function(clickts, element){
+        if (element.childNodes.length == 1) {
+            oT.player.skipTo( oT.timestamp.split(clickts) );
+        }
+    }
 }
 
 

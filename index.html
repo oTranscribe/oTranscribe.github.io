@@ -41,6 +41,7 @@
             </div><!--
         --><div id="player-hook"></div><!--
         --><div id="player-time"></div><!--
+        --><div class="button reset"><i class="fa fa-refresh"></i></div><!--
     --></div><!--
     --><a href="help" target="_blank" data-l10n-id="help" class="help-title">Help</a><!--
     --><div target="_blank" class="language-title">
@@ -138,6 +139,12 @@
         <div id="lastfile"></div>
         <div id="formats"></div>
     </div>
+    
+    <div class="message-panel hidden">
+            <div class="close-message-panel"><i class="fa fa-times"></i></div>
+            <div class="message-content"></div>
+    </div>
+    
     <div id="textbox"  class="mousetrap" contenteditable="true">
         <p data-l10n-id="d-txt1">Enter your transcript here...</p>
         <p>&nbsp;</p>
@@ -155,7 +162,7 @@
         <button class="sbutton italic" onclick="document.execCommand('italic',false,null);">
             <i class="fa fa-italic" id="icon-i"></i><span class="label">ctrl+i</span>
         </button>
-        <button class="sbutton time" onclick="ts.insert();">
+        <button class="sbutton time" onclick="oT.timestamp.insert();">
             <i class="fa fa-clock-o"></i><span class="label">ctrl+j</span>
         </button>
         <div class="wordcount">
@@ -165,15 +172,25 @@
         <button class="sbutton backup">
             <i class="fa fa-history"></i><span class="label">history</span>
         </button>
+        <div class="import-file-wrapper">
+            <button class="sbutton import">
+                <i class="fa fa-sign-in" id="icon-imp"></i><span class="label" data-l10n-id="">Import</span>
+            </button>
+            <input id="local-file-import" type="file" name="file" accept=".otr"  />
+        </div>
         <button class="sbutton export">
             <i class="fa fa-share-square-o" id="icon-exp"></i><span class="label" data-l10n-id="export">Export</span>
+            
         </button>
+                
+                
         
     </div>
     <div class="export-panel">
         <div class="export-title" data-l10n-id="export-download">Download transcript as...</div>
         <a class="export-block-md" id="x-md" target="_blank"  data-l10n-id="export-markdown">Markdown (.md)</a>
         <a class="export-block-txt" id="x-txt" target="_blank" data-l10n-id="export-text">Plain text (.txt)</a>
+        <a class="export-block-txt" id="x-otr" target="_blank" data-l10n-id="">oTranscribe format (.otr)</a>
         <div class="export-title" data-l10n-id="export-send">Send transcript to...</div>
         <a class="export-block-gd unauth" id="x-gd" target="_blank" href="javascript:void(0);">
             Google Drive
