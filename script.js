@@ -1387,7 +1387,8 @@ oT.lang.langs = {
     'zh-hans': '简体中文',
     'ja': '日本語',
     'pt': 'Português',
-    'ca': 'Català'
+    'ca': 'Català',
+    'it': 'Italiano'
 }
 
 oT.lang.setLang = function(lang){
