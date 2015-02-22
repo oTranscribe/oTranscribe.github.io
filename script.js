@@ -1410,6 +1410,7 @@ oT.lang.langs = {
     'pt': 'Português',
     'ca': 'Català',
     'it': 'Italiano',
+    'da': 'Dansk',
     'id': 'Indonesia'
 }
 
