@@ -1,0 +1,132 @@
+<html>
+<head>
+<title>oTranscribe - Help</title>
+
+<link rel="stylesheet" href="../style.css" type="text/css" media="screen" title="no title" charset="utf-8">
+<link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.css" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="help">
+    <div class="container">
+        <a href="../" id="close-help"><i class="fa fa-angle-double-left"></i> back to oTranscribe</a>
+        <h1>oTranscribe Help</h1>
+
+        
+        
+        <h2 id="my_audio_file_doesn8217t_work">My audio file doesn&#8217;t work!</h2>
+
+        <p>Try the following steps:</p>
+
+        <ol>
+        <li>Convert your file to WAV or MP3 format with <a href="http://media.io/">media.io</a>. (This is an external service and is not affiliated with oTranscribe.)</li>
+        <li>Try a different web browser. oTranscribe works best on Chrome 31+ and Safari 7+.</li>
+        <li>Still no luck? You can contact me directly at <a href="mailto:otranscribe@elliotbentley.com">otranscribe@elliotbentley.com</a>.</li>
+        </ol>
+
+        <h2 id="where_is_my_transcript_stored_how_secure_is_it">Where is my transcript stored? How secure is it?</h2>
+
+        <p>oTranscribe is designed in a way that your data (both the audio file and the written transcript) <em>never</em> leaves your local computer. The transcript is not kept on a remote server or &#8220;in the cloud&#8221;, but is instead in the browser&#8217;s <em>localStorage</em>. The downside is that it is not possible to access your saved transcripts from another computer.</p>
+
+    <p>oTranscribe's automatic backup system saves the current transcript every five minutes, and stores each copy until the browser's storage is full. Click on the <i class="fa fa-history"></i> button to view backups and restore an old copy of your transcript.</p>
+    
+    <p>oTranscribe is not a permanent document store, as browser storage is notoriously unreliable (even with this backup system). Please make sure to export your work regularly to prevent loss of data.</p>
+
+    <h2 id="what_keyboard_shortcuts_are_there">What keyboard shortcuts are there?</h2>
+
+    <h3 id="audio_playback">Audio playback</h3>
+
+    <ul>
+    <li><strong>Esc</strong>: Play/pause</li>
+    <li><strong>F1</strong>: Rewind</li>
+    <li><strong>F2</strong>: Fast-forward</li>
+    <li><strong>F3</strong>: Slow down</li>
+    <li><strong>F4</strong>: Speed up</li>
+    </ul>
+
+    <h3 id="text_editing">Text editing</h3>
+
+    <ul>
+    <li><strong>Ctrl+B</strong>: Bold</li>
+    <li><strong>Ctrl+I</strong>: Italics</li>
+    <li><strong>Ctrl+J</strong>: Insert timestamp</li>
+    <li><strong>Ctrl+S</strong>: Manual backup</li>
+    </ul>
+
+    <p>Note: On OS X, using Cmd instead of Ctrl.</p>
+
+    <h3 id="audio_playback">Chromebook / Chrome OS alternative controls</h3>
+
+    <ul>
+    <li><strong>Ctrl+1</strong>: Rewind</li>
+    <li><strong>Ctrl+2</strong>: Fast-forward</li>
+    <li><strong>Ctrl+3</strong>: Slow down</li>
+    <li><strong>Ctrl+4</strong>: Speed up</li>
+    </ul>
+
+    <p>(Because they don't have Function keys.)</p>
+
+    <h2 id="what_audio_formats_does_otranscribe_support">What audio formats does oTranscribe support?</h2>
+
+    <p>oTranscribe is limited by the formats supported by each individual browser. The formats supported by your own browser will be listed below the &#8220;Choose audio file&#8221; button. In general, WAV files are widely supported, and MP3 files mostly work on everything except Mozilla Firefox. Certain video files, as well as YouTube videos, are also supported.</p>
+
+    <h2 id="how_do_the_interactive_timestamps_work">How do the interactive timestamps work?</h2>
+
+    <p>Pressing <strong>Ctrl+J</strong> (<strong>Cmd+J</strong> on OS X) will insert the audio file&#8217;s current time into the document. This timestamp is hyperlinked and will skip to the specific time in the audio file.</p>
+
+    <h2 id="will_otranscribe_automatically_convert_my_audio_into_text">Will oTranscribe automatically convert my audio into text?</h2>
+
+    <p>Sadly not - but it may make the manual job a bit less painful. Perfect speech-to-text conversion software is still in the realms of fantasy (ever tried <a href="http://www.youtube.com/watch?v=SGxKhUuZ0Rc">using Siri with a broad Scottish accent</a>?).</p>
+
+    <h2 id="can_i_use_otranscribe_offline">Can I use oTranscribe offline?</h2>
+    
+    <p>Yes! oTranscribe.com will automatically save an offline copy of itself in your browser's <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Using_the_application_cache">HTML5 Application Cache</a> when you load up the page for the first time. To use the offline version, simply go to oTranscribe.com without an internet connection. It's that simple.</p>
+    <p>Note that buttons will look different when offline and some features like YouTube support and Google Drive export will not work.</p>
+            
+    <h2 id="why_cant_i_change_the_speed_of_a_youtube_video">Why can't I change the speed of a YouTube video?</h2>
+
+    <p>Some YouTube videos simply don't support it. This isn't something oTranscribe has any control over, unfortunately.</p>
+
+
+    <h2 id="how_do_i_import_and_export_my_transcript">How do I import and export my transcript?</h2>
+
+    <p>oTranscribe can only import one type of file, the .OTR oTranscribe file format. This format preserves the clickable time stamps.</p>
+    
+    <p>Open the export panel by clicking on the <i class="fa fa-share-square-o"></i> button. You can export .OTR files, along with plain text (.txt) and Markdown (.md) files.</p>
+    
+
+    <h2 id="who_made_otranscribe">Who made oTranscribe?</h2>
+
+    <p>Elliot Bentley (that&#8217;s me) created oTranscribe, and is currently the sole developer. If you&#8217;re interested, Journalism.co.uk did <a href="http://www.journalism.co.uk/news/journalist-creates-web-app-for-audio-transcription/s2/a555258/">a neat article on oTranscribe&#8217;s origins</a>. </p>
+    <p>Translations have been provided by the following talented and generous volunteers:</p>
+    <ul>
+        <li>Catalan: <a href="http://www.softcatala.org/wiki/Usuari:Jmontane">Joan Montané</a> and <a href="https://twitter.com/jonsindreu">Jon Sindreu</a>.</li>
+        <li>Chinese: baiqj, Cindy Ng and <a href="https://github.com/andy0130tw">Andy Pan</a>.</li>
+        <li>Danish: <a href="http://christianb.dk">Christian Bruun</a>.</li>
+        <li>Dutch: <a href="http://www.eenmanierom.nl">Patrick Mackaaij</a> and Marjolein Quist.</li>
+        <li>French: <a href="http://www.olivieraubert.net">Olivier Aubert</a>, <a href="https://github.com/goofy-bz">@goofy-bz</a> and <a href="http://quantumtunnel.wordpress.com">Dr J Rogel-Salazar</a>.</li>
+        <li>German: <a href="http://quantumtunnel.wordpress.com">Dr J Rogel-Salazar</a> and Lisa Bernhardt.</li>
+        <li>Indonesian: <a href="mailto:joy.tikoalu@gmail.com">Joy Tikoalu</a>.</li>
+        <li>Italian: <a href="http://quantumtunnel.wordpress.com">Dr J Rogel-Salazar</a>, <a href="http://edoput.it">Edoardo Putti</a> and Federico Lasta.</li>
+        <li>Japanese: <a href="http://blog.harupong.com">harupong</a>.</li>
+        <li>Polish: Emil Maruszczak and Piotr Tarasewicz.</li>
+        <li>Portuguese: <a href="http://www.envidenefelibata.com">enVide neFelibata</a>.</li>
+        <li>Brazilian Portuguese: Leonardo Barichello.</li>
+        <li>Spanish: <a href="https://github.com/crskkk">Cristian Duque</a>, <a href="http://quantumtunnel.wordpress.com">Dr J Rogel-Salazar</a> and <a href="https://twitter.com/AdrianBlancoR">Adrián Blanco</a>.</li>
+        <li>Ukrainian: <a href="https://github.com/myroslav">Myroslav Opyr</a></li>
+    </ul>
+    
+    <h2 id="">Can I help translate oTranscribe?</h2>
+    
+    <p>Yes! <a href="https://github.com/oTranscribe/oTranscribe/wiki/Help-translate-oTranscribe">Find out more about providing translations here</a>.</p>
+
+    <h2 id="my_question_isn8217t_answered_here">My question isn&#8217;t answered here.</h2>
+
+    <p>You can contact me directly by tweeting at <a href="http://twitter.com/oTranscribe">@oTranscribe</a> or <a href="mailto:otranscribe@elliotbentley.com">emailing me</a>. I try to respond as soon as possible - but please note that this is a hobby, not my job.</p>
+
+</div>
+
+</body>
+
+</html>
