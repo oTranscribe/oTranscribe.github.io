@@ -1,9 +1,8 @@
 CACHE MANIFEST
-# Updated Thu, 24 Nov 2016 02:53:53 GMT
  
 index.html
 style.css
-script.js
+bundle.js
 l10n.js
 data.ini
 help/index.html
@@ -13,3 +12,4 @@ NETWORK:
  
 FALLBACK:
 
+# Updated 02/01/2017_11:09:08:N
